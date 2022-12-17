@@ -152,9 +152,30 @@ pki
 
 现在的环境就可以完成本小节的操作流程了，大家可以先按照本小节试一遍，但是请注意，**试完在群里说一声，需要更新客户端证书才能连接 VPN**。
 
-首先生成公钥：
+以下用 rsa 算法为例，生成公钥、公共证书、服务器私钥和服务器证书：
+
+1. 生成公钥：
 ```
 pki --gen --type rsa --size 4096 --outform pem > ~/pki/private/ca-key.pem
 ```
+2. 生成公共证书：
+```
+pki --self --ca --lifetime 3650 --in ~/pki/private/ca-key.pem \
+    --type rsa --dn "CN=VPN root CA" --outform pem > ~/pki/cacerts/ca-cert.pem
+```
+3. 生成服务器私钥：
+```
+pki --gen --type rsa --size 4096 --outform pem > ~/pki/private/server-key.pem
+```
+4. 生成服务器证书：
+```
+pki --pub --in ~/pki/private/server-key.pem --type rsa \
+    | pki --issue --lifetime 1825 \
+        --cacert ~/pki/cacerts/ca-cert.pem \
+        --cakey ~/pki/private/ca-key.pem \
+        --dn "CN=120.79.52.57" --san @120.79.52.57 --san 120.79.52.57 \
+        --flag serverAuth --flag ikeIntermediate --outform pem \
+    >  ~/pki/certs/server-cert.pem
+```
 
-**注：这里是生成了 4096位的 rsa 公钥，可以按实际情况替换**
+[参考资料](https://www.digitalocean.com/community/tutorials/how-to-set-up-an-ikev2-vpn-server-with-strongswan-on-ubuntu-22-04)
