@@ -64,6 +64,10 @@ static int req()
 				{
 					type = KEY_ECDSA;
 				}
+				else if (streq(arg, "sm2"))
+				{
+					type = KEY_SM2;
+				}
 				else if (streq(arg, "bliss"))
 				{
 					type = KEY_BLISS;
@@ -262,10 +266,10 @@ static void __attribute__ ((constructor))reg()
 	command_register((command_t) {
 		req, 'r', "req",
 		"create a PKCS#10 certificate request",
-		{"[--in file|--keyid hex] [--type rsa|ecdsa|bliss|priv]",
+		{"[--in file|--keyid hex] [--type rsa|ecdsa|bliss|sm2|priv]",
 		 " --oldreq file|--dn distinguished-name [--san subjectAltName]+",
 		 "[--profile server|client|dual|ocsp] [--password challengePassword]",
-		 "[--digest sha1|sha224|sha256|sha384|sha512|sha3_224|sha3_256|sha3_384|sha3_512]",
+		 "[--digest sm3|sha1|sha224|sha256|sha384|sha512|sha3_224|sha3_256|sha3_384|sha3_512]",
 		 "[--rsa-padding pkcs1|pss] [--outform der|pem]"},
 		{
 			{"help",        'h', 0, "show usage information"},

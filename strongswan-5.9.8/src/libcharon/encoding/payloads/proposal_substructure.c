@@ -172,6 +172,8 @@ typedef enum {
 	IKEV1_ENCR_CAST_CBC = 6,
 	IKEV1_ENCR_AES_CBC = 7,
 	IKEV1_ENCR_CAMELLIA_CBC = 8,
+	IKEV1_ENCR_SM1_CBC = 9,
+	IKEV1_ENCR_SM4_CBC = 10,
 	/* FreeS/WAN proprietary */
 	IKEV1_ENCR_SERPENT_CBC = 65004,
 	IKEV1_ENCR_TWOFISH_CBC = 65005,
@@ -187,6 +189,7 @@ typedef enum {
 	IKEV1_HASH_SHA2_256 = 4,
 	IKEV1_HASH_SHA2_384 = 5,
 	IKEV1_HASH_SHA2_512 = 6,
+	IKEV1_HASH_SM3 = 7,
 } ikev1_hash_t;
 
 /**
@@ -222,6 +225,8 @@ typedef enum {
 	IKEV1_ESP_ENCR_SEED_CBC = 21,
 	IKEV1_ESP_ENCR_CAMELLIA = 22,
 	IKEV1_ESP_ENCR_NULL_AUTH_AES_GMAC = 23,
+	IKEV1_ESP_ENCR_SM1 = 24,
+	IKEV1_ESP_ENCR_SM4 = 25,
 	/* FreeS/WAN proprietary */
 	IKEV1_ESP_ENCR_SERPENT = 252,
 	IKEV1_ESP_ENCR_TWOFISH = 253,
@@ -243,6 +248,7 @@ typedef enum {
 	IKEV1_AH_AES_128_GMAC = 11,
 	IKEV1_AH_AES_192_GMAC = 12,
 	IKEV1_AH_AES_256_GMAC = 13,
+	IKEV1_AH_HMAC_SM3 = 14,
 } ikev1_ah_transid_t;
 
 /**
@@ -262,6 +268,7 @@ typedef enum {
 	IKEV1_AUTH_AES_128_GMAC = 11,
 	IKEV1_AUTH_AES_192_GMAC = 12,
 	IKEV1_AUTH_AES_256_GMAC = 13,
+	IKEV1_AUTH_HMAC_SM3 = 14,
 } ikev1_auth_algo_t;
 
 /**
@@ -296,6 +303,7 @@ typedef enum {
 	IKEV1_AUTH_ECDSA_256 = 9,
 	IKEV1_AUTH_ECDSA_384 = 10,
 	IKEV1_AUTH_ECDSA_521 = 11,
+	IKEV1_AUTH_SM2 = 12,
 	/* XAuth Modes */
 	IKEV1_AUTH_XAUTH_INIT_PSK = 65001,
 	IKEV1_AUTH_XAUTH_RESP_PSK = 65002,
@@ -594,6 +602,8 @@ static algo_map_t map_encr[] = {
 	{ IKEV1_ENCR_CAMELLIA_CBC,	ENCR_CAMELLIA_CBC },
 	{ IKEV1_ENCR_SERPENT_CBC,	ENCR_SERPENT_CBC },
 	{ IKEV1_ENCR_TWOFISH_CBC,	ENCR_TWOFISH_CBC },
+	{ IKEV1_ENCR_SM1_CBC,		ENCR_SM1_CBC },
+	{ IKEV1_ENCR_SM4_CBC,		ENCR_SM4_CBC },
 };
 
 /**
@@ -605,6 +615,7 @@ static algo_map_t map_integ[] = {
 	{ IKEV1_HASH_SHA2_256,		AUTH_HMAC_SHA2_256_128 },
 	{ IKEV1_HASH_SHA2_384,		AUTH_HMAC_SHA2_384_192 },
 	{ IKEV1_HASH_SHA2_512,		AUTH_HMAC_SHA2_512_256 },
+	{ IKEV1_HASH_SM3,		    AUTH_HMAC_SM3 },
 };
 
 /**
@@ -616,6 +627,7 @@ static algo_map_t map_prf[] = {
 	{ IKEV1_HASH_SHA2_256,		PRF_HMAC_SHA2_256 },
 	{ IKEV1_HASH_SHA2_384,		PRF_HMAC_SHA2_384 },
 	{ IKEV1_HASH_SHA2_512,		PRF_HMAC_SHA2_512 },
+	{ IKEV1_HASH_SM3,		    PRF_HMAC_SM3 },
 };
 
 /**
@@ -644,6 +656,8 @@ static algo_map_t map_esp[] = {
 	{ IKEV1_ESP_ENCR_NULL_AUTH_AES_GMAC,	ENCR_NULL_AUTH_AES_GMAC },
 	{ IKEV1_ESP_ENCR_SERPENT,				ENCR_SERPENT_CBC },
 	{ IKEV1_ESP_ENCR_TWOFISH,				ENCR_TWOFISH_CBC },
+	{ IKEV1_ESP_ENCR_SM1,					ENCR_SM1_CBC },
+	{ IKEV1_ESP_ENCR_SM4,					ENCR_SM4_CBC },
 };
 
 /**
@@ -660,6 +674,7 @@ static algo_map_t map_ah[] = {
 	{ IKEV1_AH_AES_128_GMAC,	AUTH_AES_128_GMAC },
 	{ IKEV1_AH_AES_192_GMAC,	AUTH_AES_192_GMAC },
 	{ IKEV1_AH_AES_256_GMAC,	AUTH_AES_256_GMAC },
+	{ IKEV1_AH_HMAC_SM3,		AUTH_HMAC_SM3 },
 };
 
 /**
@@ -677,6 +692,7 @@ static algo_map_t map_auth[] = {
 	{ IKEV1_AUTH_AES_128_GMAC,		AUTH_AES_128_GMAC },
 	{ IKEV1_AUTH_AES_192_GMAC,		AUTH_AES_192_GMAC },
 	{ IKEV1_AUTH_AES_256_GMAC,		AUTH_AES_256_GMAC },
+	{ IKEV1_AUTH_HMAC_SM3,			AUTH_HMAC_SM3 },
 };
 
 /**
@@ -834,6 +850,8 @@ static uint16_t get_ikev1_auth(auth_method_t method)
 			return IKEV1_AUTH_ECDSA_384;
 		case AUTH_ECDSA_521:
 			return IKEV1_AUTH_ECDSA_521;
+		case AUTH_SM2:
+			return IKEV1_AUTH_SM2;
 		case AUTH_PSK:
 		default:
 			return IKEV1_AUTH_PSK;
@@ -1187,6 +1205,8 @@ METHOD(proposal_substructure_t, get_auth_method, auth_method_t,
 			return AUTH_ECDSA_384;
 		case IKEV1_AUTH_ECDSA_521:
 			return AUTH_ECDSA_521;
+		case IKEV1_AUTH_SM2:
+			return AUTH_SM2;
 		default:
 			return AUTH_NONE;
 	}

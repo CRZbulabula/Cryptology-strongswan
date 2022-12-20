@@ -279,6 +279,9 @@ int openssl_ecdh_group_to_nid(key_exchange_method_t group)
 {
 	switch (group)
 	{
+		case CURVE_SM2:
+			this->key = EC_KEY_new_by_curve_name(NID_sm2p256v1);
+			break;
 		case ECP_192_BIT:
 			return NID_X9_62_prime192v1;
 		case ECP_224_BIT:

@@ -55,6 +55,11 @@ struct private_openssl_ec_private_key_t {
 	bool engine;
 
 	/**
+	 *  key type
+	 */
+	key_type_t type;
+
+	/**
 	 * reference count
 	 */
 	refcount_t ref;
@@ -170,6 +175,9 @@ METHOD(private_key_t, sign, bool,
 			return build_der_signature(this, NID_sha384, data, signature);
 		case SIGN_ECDSA_WITH_SHA512_DER:
 			return build_der_signature(this, NID_sha512, data, signature);
+		case SIGN_SM2_WITH_SM3:
+			return build_curve_signature(this, scheme, NID_sm3,
+										 NID_sm2p256v1, data, signature);
 		case SIGN_ECDSA_256:
 			return build_curve_signature(this, scheme, NID_sha256,
 										 NID_X9_62_prime256v1, data, signature);
@@ -203,7 +211,8 @@ METHOD(private_key_t, get_keysize, int,
 METHOD(private_key_t, get_type, key_type_t,
 	private_openssl_ec_private_key_t *this)
 {
-	return KEY_ECDSA;
+	// return KEY_ECDSA;
+	return this->type;
 }
 
 METHOD(private_key_t, get_public_key, public_key_t*,
@@ -213,7 +222,8 @@ METHOD(private_key_t, get_public_key, public_key_t*,
 	chunk_t key;
 
 	key = openssl_i2chunk(PUBKEY, this->key);
-	public = lib->creds->create(lib->creds, CRED_PUBLIC_KEY, KEY_ECDSA,
+	// public = lib->creds->create(lib->creds, CRED_PUBLIC_KEY, KEY_ECDSA,
+	public = lib->creds->create(lib->creds, CRED_PUBLIC_KEY, this->type,
 								BUILD_BLOB_ASN1_DER, key, BUILD_END);
 	free(key.ptr);
 	return public;
@@ -358,20 +368,32 @@ openssl_ec_private_key_t *openssl_ec_private_key_gen(key_type_t type,
 	}
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-	switch (key_size)
+	switch (type)
 	{
-		case 256:
-			key = EVP_EC_gen("P-256");
-			break;
-		case 384:
-			key = EVP_EC_gen("P-384");
-			break;
-		case 521:
-			key = EVP_EC_gen("P-521");
-			break;
-		default:
-			DBG1(DBG_LIB, "EC private key size %d not supported", key_size);
+		case KEY_SM2:{
+			key = EC_KEY_new_by_curve_name(NID_sm2p256v1);
+		}break;
+		switch (key_size)
+		{
+			case 256:
+				key = EVP_EC_gen("P-256");
+				break;
+			case 384:
+				key = EVP_EC_gen("P-384");
+				break;
+			case 521:
+				key = EVP_EC_gen("P-521");
+				break;
+			default:
+				DBG1(DBG_LIB, "EC private key size %d not supported", key_size);
+				return NULL;
+		}
+		break;
+		default:{
+			DBG1(DBG_LIB, "EC private type %d key size %d not supported", type, key_size);
+			destroy(this);
 			return NULL;
+		}
 	}
 #else /* OPENSSL_VERSION_NUMBER */
 	EC_KEY *ec;
@@ -408,6 +430,7 @@ openssl_ec_private_key_t *openssl_ec_private_key_gen(key_type_t type,
 		return NULL;
 	}
 	this = create_internal(key);
+	this->type = type;
 	return &this->public;
 }
 
@@ -479,6 +502,7 @@ openssl_ec_private_key_t *openssl_ec_private_key_load(key_type_t type,
 		return NULL;
 	}
 	this = create_internal(key);
+	this->type = type;
 	return &this->public;
 }
 #endif /* OPENSSL_NO_ECDSA */

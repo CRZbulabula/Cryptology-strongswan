@@ -19,6 +19,7 @@ pki_SOURCES = pki.c pki.h pki_cert.c pki_cert.h command.c command.h \
 	commands/scepca.c \
 	commands/self.c \
 	commands/signcrl.c \
+	commands/crypto.c \
 	commands/verify.c \
 	est/est_tls.h est/est_tls.c	\
 	scep/scep.h scep/scep.c
