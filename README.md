@@ -210,3 +210,8 @@ systemctl restart strongswan-starter
 
 ## 6. 补充
 当前的 VPN 服务使用 **RSA** 算法生成证书，使用 **EAP** 算法进行认证，如果替换算法模块导致 VPN 无法运行，请及时联系我修改配置文件～
+
+charon 系统的日志在：
+```
+/var/log/syslog
+```
