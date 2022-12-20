@@ -66,8 +66,8 @@ METHOD(plugin_t, get_features, int,
 		PLUGIN_REGISTER(HASHER, gmalg_hasher_create),
 			PLUGIN_PROVIDE(HASHER, HASH_SM3),
 		/* EC DH groups */
-		PLUGIN_REGISTER(DH, gmalg_ec_diffie_hellman_create),
-					PLUGIN_PROVIDE(DH, CURVE_SM2),
+		PLUGIN_REGISTER(KE, gmalg_ec_diffie_hellman_create),
+					PLUGIN_PROVIDE(KE, CURVE_SM2),
 		/* EC private/public key loading */
 		PLUGIN_REGISTER(PRIVKEY, gmalg_ec_private_key_load, TRUE),
 			PLUGIN_PROVIDE(PRIVKEY, KEY_SM2),

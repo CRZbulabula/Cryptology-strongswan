@@ -184,7 +184,7 @@ bool gmalg_ec_fingerprint(ECCrefPublicKey *pubkey, cred_encoding_type_t type, ch
 
 	memset(fp->ptr, 0x88, fp->len);
 
-	lib->encoding->cache(lib->encoding, type, pubkey, *fp);
+	lib->encoding->cache(lib->encoding, type, pubkey, fp);
 	return TRUE;
 }
 

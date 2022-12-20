@@ -85,6 +85,7 @@ ENUM_NEXT(key_exchange_method_names_short, MODP_1024_160, CURVE_448, ECP_521_BIT
 	"ecp384bp",
 	"ecp512bp",
 	"curve25519",
+	"curvesm2",
 	"curve448");
 ENUM_NEXT(key_exchange_method_names_short, MODP_NULL, MODP_NULL, CURVE_448,
 	"modpnull");

@@ -180,7 +180,7 @@ ecp384bp,         KEY_EXCHANGE_METHOD, ECP_384_BP,                 0
 ecp512bp,         KEY_EXCHANGE_METHOD, ECP_512_BP,                 0
 curve25519,       KEY_EXCHANGE_METHOD, CURVE_25519,                0
 x25519,           KEY_EXCHANGE_METHOD, CURVE_25519,                0
-sm2dh,            DIFFIE_HELLMAN_GROUP, CURVE_SM2,                 0
+sm2dh,            KEY_EXCHANGE_METHOD, CURVE_SM2,                 0
 curve448,         KEY_EXCHANGE_METHOD, CURVE_448,                  0
 x448,             KEY_EXCHANGE_METHOD, CURVE_448,                  0
 ntru112,          KEY_EXCHANGE_METHOD, NTRU_112_BIT,               0

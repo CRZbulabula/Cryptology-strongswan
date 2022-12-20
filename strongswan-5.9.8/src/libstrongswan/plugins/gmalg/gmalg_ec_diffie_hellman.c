@@ -20,21 +20,21 @@
 
 #include <utils/debug.h>
 
-typedef struct private_gmalg_ec_diffie_hellman_t private_gmalg_ec_diffie_hellman_t;
+typedef struct private_gmalg_ec_key_exchange_t private_gmalg_ec_key_exchange_t;
 
 /**
- * Private data of an gmalg_ec_diffie_hellman_t object.
+ * Private data of an gmalg_ec_key_exchange_t object.
  */
-struct private_gmalg_ec_diffie_hellman_t {
+struct private_gmalg_ec_key_exchange_t {
 	/**
-	 * Public gmalg_ec_diffie_hellman_t interface.
+	 * Public gmalg_ec_key_exchange_t interface.
 	 */
-	gmalg_ec_diffie_hellman_t public;
+	gmalg_ec_key_exchange_t public;
 
 	/**
 	 * Diffie Hellman group number.
 	 */
-	diffie_hellman_group_t group;
+	key_exchange_method_t group;
 
 	/**
 	 * Shared secret
@@ -67,7 +67,7 @@ struct private_gmalg_ec_diffie_hellman_t {
  *   of the Diffie-Hellman shared secret value is the same as that of the
  *   Diffie-Hellman public value."
  */
-static bool compute_shared_key(private_gmalg_ec_diffie_hellman_t *this,
+static bool compute_shared_key(private_gmalg_ec_key_exchange_t *this,
 							   chunk_t *shared_secret)
 {
 	ECCrefPublicKey P[1];
@@ -81,8 +81,8 @@ static bool compute_shared_key(private_gmalg_ec_diffie_hellman_t *this,
 	return ret;
 }
 
-METHOD(diffie_hellman_t, set_other_public_value, bool,
-	private_gmalg_ec_diffie_hellman_t *this, chunk_t value)
+METHOD(key_exchange_t, set_other_public_value, bool,
+	private_gmalg_ec_key_exchange_t *this, chunk_t value)
 {
 	chunk_clear(&this->shared_secret);
 
@@ -98,8 +98,8 @@ METHOD(diffie_hellman_t, set_other_public_value, bool,
 	return TRUE;
 }
 
-METHOD(diffie_hellman_t, get_my_public_value, bool,
-	private_gmalg_ec_diffie_hellman_t *this,chunk_t *value)
+METHOD(key_exchange_t, get_my_public_value, bool,
+	private_gmalg_ec_key_exchange_t *this,chunk_t *value)
 {
 	*value  = chunk_alloc(ECCref_MAX_LEN*2);
 	memcpy(value->ptr, this->pubKey->x, ECCref_MAX_LEN);
@@ -108,8 +108,8 @@ METHOD(diffie_hellman_t, get_my_public_value, bool,
 	return TRUE;
 }
 
-METHOD(diffie_hellman_t, set_private_value, bool,
-	private_gmalg_ec_diffie_hellman_t *this, chunk_t value)
+METHOD(key_exchange_t, set_private_value, bool,
+	private_gmalg_ec_key_exchange_t *this, chunk_t value)
 {
 	bool ret = FALSE;
 	if (value.len != ECCref_MAX_LEN)
@@ -120,8 +120,8 @@ METHOD(diffie_hellman_t, set_private_value, bool,
 	return ret;
 }
 
-METHOD(diffie_hellman_t, get_shared_secret, bool,
-	private_gmalg_ec_diffie_hellman_t *this, chunk_t *secret)
+METHOD(key_exchange_t, get_shared_secret, bool,
+	private_gmalg_ec_key_exchange_t *this, chunk_t *secret)
 {
 	if (!this->computed)
 	{
@@ -131,14 +131,14 @@ METHOD(diffie_hellman_t, get_shared_secret, bool,
 	return TRUE;
 }
 
-METHOD(diffie_hellman_t, get_dh_group, diffie_hellman_group_t,
-	private_gmalg_ec_diffie_hellman_t *this)
+METHOD(key_exchange_t, get_dh_group, key_exchange_method_t,
+	private_gmalg_ec_key_exchange_t *this)
 {
 	return this->group;
 }
 
-METHOD(diffie_hellman_t, destroy, void,
-	private_gmalg_ec_diffie_hellman_t *this)
+METHOD(key_exchange_t, destroy, void,
+	private_gmalg_ec_key_exchange_t *this)
 {
 	GMALG_CloseDevice(this->hDeviceHandle);
 	chunk_clear(&this->shared_secret);
@@ -149,18 +149,18 @@ METHOD(diffie_hellman_t, destroy, void,
 /*
  * Described in header.
  */
-gmalg_ec_diffie_hellman_t *gmalg_ec_diffie_hellman_create(diffie_hellman_group_t group)
+gmalg_ec_key_exchange_t *gmalg_ec_diffie_hellman_create(key_exchange_method_t group)
 {
-	private_gmalg_ec_diffie_hellman_t *this;
+	private_gmalg_ec_key_exchange_t *this;
 
 	INIT(this,
 		.public = {
 			.dh = {
 				.get_shared_secret = _get_shared_secret,
-				.set_other_public_value = _set_other_public_value,
-				.get_my_public_value = _get_my_public_value,
-				.set_private_value = _set_private_value,
-				.get_dh_group = _get_dh_group,
+				.set_public_key = _set_other_public_value,
+				.get_public_key = _get_my_public_value,
+				.set_private_key = _set_private_value,
+				.get_method = _get_dh_group,
 				.destroy = _destroy,
 			},
 		},
