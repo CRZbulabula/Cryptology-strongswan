@@ -229,7 +229,8 @@ METHOD(public_key_t, verify, bool,
 			return verify_signature(this, 0, data, signature);
 		case SIGN_SM2_WITH_SM3:
 			return verify_curve_signature(this, scheme, NID_sm3,
-										  NID_sm2p256v1, data, signature);
+										//   NID_sm2p256v1, data, signature);
+										  NID_sm2, data, signature);
 		case SIGN_ECDSA_256:
 			return verify_curve_signature(this, scheme, NID_sha256,
 										  NID_X9_62_prime256v1, data, signature);

@@ -177,7 +177,8 @@ METHOD(private_key_t, sign, bool,
 			return build_der_signature(this, NID_sha512, data, signature);
 		case SIGN_SM2_WITH_SM3:
 			return build_curve_signature(this, scheme, NID_sm3,
-										 NID_sm2p256v1, data, signature);
+										//  NID_sm2p256v1, data, signature);
+										 NID_sm2, data, signature);
 		case SIGN_ECDSA_256:
 			return build_curve_signature(this, scheme, NID_sha256,
 										 NID_X9_62_prime256v1, data, signature);
@@ -371,7 +372,7 @@ openssl_ec_private_key_t *openssl_ec_private_key_gen(key_type_t type,
 	switch (type)
 	{
 		case KEY_SM2:{
-			key = EC_KEY_new_by_curve_name(NID_sm2p256v1);
+			key = EC_KEY_new_by_curve_name(NID_sm2);
 		}break;
 		switch (key_size)
 		{
@@ -398,21 +399,36 @@ openssl_ec_private_key_t *openssl_ec_private_key_gen(key_type_t type,
 #else /* OPENSSL_VERSION_NUMBER */
 	EC_KEY *ec;
 
-	switch (key_size)
+	switch (type)
 	{
-		case 256:
-			ec = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-			break;
-		case 384:
-			ec = EC_KEY_new_by_curve_name(NID_secp384r1);
-			break;
-		case 521:
-			ec = EC_KEY_new_by_curve_name(NID_secp521r1);
-			break;
-		default:
-			DBG1(DBG_LIB, "EC private key size %d not supported", key_size);
+		case KEY_SM2:{
+			ec = EC_KEY_new_by_curve_name(NID_sm2);
+		}break;
+		case KEY_ECDSA:
+		switch (key_size)
+		{
+			case 256:
+				ec = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+				break;
+			case 384:
+				ec = EC_KEY_new_by_curve_name(NID_secp384r1);
+				break;
+			case 521:
+				ec = EC_KEY_new_by_curve_name(NID_secp521r1);
+				break;
+			default:
+				DBG1(DBG_LIB, "EC private key size %d not supported", key_size);
+				destroy(this);
+				return NULL;
+		}
+		break;
+		default:{
+			DBG1(DBG_LIB, "EC private type %d key size %d not supported", type, key_size);
+			destroy(this);
 			return NULL;
+		}
 	}
+
 	if (ec && EC_KEY_generate_key(ec) == 1)
 	{
 		key = EVP_PKEY_new();
