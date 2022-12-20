@@ -56,7 +56,23 @@ charon-cmd
 
 本小节将介绍 strongswan 官方虚拟系统 **charon** 环境下的 VPN 连接测试方案。虽然[参考文档](https://www.digitalocean.com/community/tutorials/how-to-set-up-an-ikev2-vpn-server-with-strongswan-on-ubuntu-22-04)给出了一些其它可能的连接方案，但是我都失败了。
 
-首先，你需要把项目的 ca-cert.pem 文件拉到本地。然后执行以下指令：
+首先，你需要把项目的 ca-cert.pem 文件拉到本地，登录云服务器并执行：
+```
+cat /usr/local/etc/ipsec.d/cacerts/ca-cert.pem
+```
+
+复制命令行输出的全部内容，形如：
+```
+-----BEGIN CERTIFICATE-----
+MIIE8DCCAtigAwIBAgIIUUepKT1hL6gwDQYJKoZIhvcNAQEMBQAwFjEUMBIGA1UE
+...
+...
+...
+kqp7oqRu6K8jFInfWCet8rysatg=
+-----END CERTIFICATE-----
+```
+
+在本地新建 `ca-cert.pem` 文件，然后执行以下指令：
 ```
 sudo charon-cmd --cert ca-cert.pem --host 120.79.52.57 --identity Mimaxue
 ```
@@ -103,54 +119,54 @@ configure: error: OpenSSL libcrypto not found
 1. [官网安装文档](https://docs.strongswan.org/docs/5.9/install/install.html)
 2. [macOS 附加参数](https://docs.strongswan.org/docs/5.9/os/macos.html)
 
-在 Ubuntu 下，先进入 `~/Cryptology-strongswan/strongswan-5.9.8` 目录（这也是我们的 git 项目），执行：
+在 Ubuntu 下，先进入 `~/strongswan` 目录，执行：
 ```
-./configure --prefix=/usr --sysconfdir=/etc --disable-gmp --enable-openssl --enable-systemd --enable-swanctl --disable-charon --disable-stroke --disable-scepclient
-```
-
-然后：
-```
-make && make install
+./configure --enable-chapoly --enable-eap-identity --enable-eap-mschapv2 --enable-openssl \
+    && make && make install
 ```
 
-看到以下输出：
-```
-Making install in testing
-make[2]: Entering directory '/root/Cryptology-strongswan/strongswan-5.9.8/testing'
-make[3]: Entering directory '/root/Cryptology-strongswan/strongswan-5.9.8/testing'
-make[3]: Nothing to be done for 'install-exec-am'.
-make[3]: Nothing to be done for 'install-data-am'.
-make[3]: Leaving directory '/root/Cryptology-strongswan/strongswan-5.9.8/testing'
-make[2]: Leaving directory '/root/Cryptology-strongswan/strongswan-5.9.8/testing'
-Making install in scripts
-make[2]: Entering directory '/root/Cryptology-strongswan/strongswan-5.9.8/scripts'
-make[3]: Entering directory '/root/Cryptology-strongswan/strongswan-5.9.8/scripts'
-make[3]: Nothing to be done for 'install-exec-am'.
-make[3]: Nothing to be done for 'install-data-am'.
-make[3]: Leaving directory '/root/Cryptology-strongswan/strongswan-5.9.8/scripts'
-make[2]: Leaving directory '/root/Cryptology-strongswan/strongswan-5.9.8/scripts'
-make[2]: Entering directory '/root/Cryptology-strongswan/strongswan-5.9.8'
-make[3]: Entering directory '/root/Cryptology-strongswan/strongswan-5.9.8'
-make[3]: Nothing to be done for 'install-exec-am'.
-make[3]: Leaving directory '/root/Cryptology-strongswan/strongswan-5.9.8'
-make[2]: Leaving directory '/root/Cryptology-strongswan/strongswan-5.9.8'
-make[1]: Leaving directory '/root/Cryptology-strongswan/strongswan-5.9.8'
-```
+**注：** 这里的附加参数请参考[官方文档](https://docs.strongswan.org/docs/5.9/install/autoconf.html)，如果没有加载好指定模块，VPN 服务将无法运行。
 
-这里就编译成功了，`make && make install` 指令会还把相关工具直接安装进环境变量，可以用以下指令测试：
+源码编译完成后，请进行以下两个验证：
+
+### 4.1 验证 pki
+`pki` 指令用于生成 IPsec-VPN 使用的证书，是我们算法模块国密化替换的主要验证工具，执行：
 ```
 pki
 ```
 
-**注：**`pki` 指令用于生成 IPsec-VPN 使用的证书，应该是我们算法模块国密化替换的主要验证工具。
+你将会看到：
+```
+strongSwan 5.9.8 PKI tool
+loaded plugins: aes des rc2 sha2 sha1 md5 mgf1 random x509 revocation pubkey pkcs1 pkcs7 pkcs12 dnskey sshkey pem openssl pkcs8 gmp curve25519 hmac kdf drbg
+```
 
+**注：** `loaded plugins` 标识了你加载的所有模块
 
+### 4.2 验证 strongswan-starter
+`strongswan-starter` 是云服务器上的 VPN 后台服务，先重新加载并重启模型：
+```
+systemctl daemon-reload && \
+systemctl restart strongswan-starter
+```
+
+然后查询它的状态：
+```
+systemctl status strongswan-starter
+```
+
+你将会看到：
+```
+Active: active (running)
+```
+
+**注：** 在使用 `status` 指令时，你也会在 `loaded plugins` 中看到你加载的所有模块
 
 接下来应该就可以测试替换的算法模块啦！
 
 ## 5. 算法测试
 
-现在的环境就可以完成本小节的操作流程了，大家可以先按照本小节试一遍，但是请注意，**试完在群里说一声，需要更新客户端证书才能连接 VPN**。
+现在的环境就可以完成本小节的操作流程了，大家可以先按照本小节试一遍，但是请注意，**试完在群里说一声，需要按照 3. 的流程更新客户端证书后，才能成功连接 VPN**。
 
 以下用 rsa 算法为例，生成公钥、公共证书、服务器私钥和服务器证书：
 
@@ -178,4 +194,19 @@ pki --pub --in ~/pki/private/server-key.pem --type rsa \
     >  ~/pki/certs/server-cert.pem
 ```
 
+替换新生成的的证书：
+```
+sudo cp -r ~/pki/* /usr/local/etc/ipsec.d
+```
+
+重启服务：
+```
+systemctl restart strongswan-starter
+```
+
+此时，按照 3. 的教程，你应该还能连通 VPN～
+
 [参考资料](https://www.digitalocean.com/community/tutorials/how-to-set-up-an-ikev2-vpn-server-with-strongswan-on-ubuntu-22-04)
+
+## 6. 补充
+当前的 VPN 服务使用 **RSA** 算法生成证书，使用 **EAP** 算法进行认证，如果替换算法模块导致 VPN 无法运行，请及时联系我修改配置文件～
